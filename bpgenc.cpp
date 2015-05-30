@@ -29,9 +29,6 @@
 #include <math.h>
 #include <assert.h>
 
-#define USE_JCTVC
-#define CONFIG_BPG_VERSION "0.9.5"
-
 #include "png.h"
 #include "jpeglib.h"
 #include "bpgenc.h"

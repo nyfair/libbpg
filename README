@@ -1,5 +1,7 @@
 BPG Image library and utilities
 -------------------------------
+NOTE: This BPG library is vc2015 compatible.
+If you want to make it vc2013 compatible, you can manually replace inline with __inline.
 
 1) Quick introduction
 ---------------------
