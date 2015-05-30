@@ -25,15 +25,21 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include <getopt.h>
-#include <inttypes.h>
+#include "getopt.h"
+#include "inttypes.h"
 #ifdef WIN32
 #include <windows.h>
 #endif
-#include <SDL/SDL.h>
-#include <SDL/SDL_image.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+#include "SDL/SDL.h"
+#undef main
 #include "libbpg.h"
+#ifdef __cplusplus
+}
+#endif#include "config.h"
 
 typedef enum {
     BG_BLACK,
@@ -91,7 +97,7 @@ Frame *bpg_load(FILE *f, int *pframe_count, int *ploop_count)
     fseek(f, 0, SEEK_SET);
     if (len < 0)
         return NULL;
-    buf = malloc(len);
+    buf = (uint8_t*)malloc(len);
     if (!buf)
         return NULL;
     if (fread(buf, 1, len, f) != len)
@@ -119,9 +125,8 @@ Frame *bpg_load(FILE *f, int *pframe_count, int *ploop_count)
         if (bpg_decoder_start(s, BPG_OUTPUT_FORMAT_RGBA32) < 0)
             break;
         bpg_decoder_get_frame_duration(s, &delay_num, &delay_den);
-        frames = realloc(frames, sizeof(frames[0]) * (frame_count + 1));
-        img = SDL_CreateRGBSurface(SDL_HWSURFACE, bi->width, bi->height, 32,
-                                   rmask, gmask, bmask, amask);
+        frames = (Frame*)realloc(frames, sizeof(frames[0]) * (frame_count + 1));
+        img = SDL_CreateRGBSurface(SDL_HWSURFACE, bi->width, bi->height, 32, bmask, gmask, rmask, amask);
         if (!img) 
             goto fail;
     
@@ -170,27 +175,14 @@ int load_image(DispContext *dc, const char *filename)
 
     f = fopen(filename, "rb");
     if (!f)
-        goto fail;
+		return -1;
     len = fread(buf, 1, sizeof(buf), f);
     if (bpg_decoder_get_info_from_buf(&bi, NULL, buf, len) >= 0) {
         fseek(f, 0, SEEK_SET);
         frames = bpg_load(f, &frame_count, &loop_count);
         if (!frames)
-            goto fail;
+			return -1;
         fclose(f);
-    } else {
-        /* use SDL image loader */
-        img = IMG_Load(filename);
-        if (!img) {
-        fail:
-            fprintf(stderr, "Could not load '%s'\n", filename);
-            return -1;
-        }
-        frame_count = 1;
-        frames = malloc(sizeof(dc->frames[0]) * frame_count);
-        frames[0].img = img;
-        frames[0].delay = 0;
-        loop_count = 1;
     }
 
     for(i = 0; i < dc->frame_count; i++) {
@@ -301,7 +293,7 @@ static void set_caption(DispContext *dc, char **argv,
     char buf[1024];
     const char *filename;
     filename = argv[image_index];
-    snprintf(buf, sizeof(buf), "bpgview [%d of %d] - %s",
+    _snprintf(buf, sizeof(buf), "bpgview [%d of %d] - %s",
              image_index + 1, image_count, filename);
     SDL_WM_SetCaption(buf, buf);
 }
@@ -475,7 +467,8 @@ int main(int argc, char **argv)
                 draw_image(dc);
                 break;
             case SDLK_b:
-                dc->background_type ^= 1;
+				// ¼öÁ¤
+                dc->background_type = (BackgroundTypeEnum)(dc->background_type ^ 1);
                 draw_image(dc);
                 break;
             case SDLK_f:

@@ -2629,7 +2629,7 @@ static int get_filename_num(char *buf, int buf_size, const char *str, int n)
     return 0;
 }
 
-void help(int is_full)
+void help()
 {
     char hevc_encoders[128];
     int i;
@@ -2654,7 +2654,7 @@ void help(int is_full)
            "-c color_space       set the preferred color space (ycbcr, rgb, ycgco,\n"
            "                     ycbcr_bt709, ycbcr_bt2020, default=ycbcr)\n"
            "-b bit_depth         set the bit depth (8 to %d, default = %d)\n"
-           "-lossless            enable lossless mode\n"
+           "-l                   enable lossless mode\n"
            "-e encoder           select the HEVC encoder (%s, default = %s)\n"
            "-m level             select the compression level (1=fast, 9=slow, default = %d)\n"
            "\n"
@@ -2662,42 +2662,23 @@ void help(int is_full)
            "-a                   generate animations from a sequence of images. Use %%d or\n"
            "                     %%Nd (N = number of digits) in the filename to specify the\n"
            "                     image index, starting from 0 or 1.\n"
-           "-fps N               set the frame rate (default = 25)\n"
-           "-loop N              set the number of times the animation is played. 0 means\n"
+           "-r N                 set the frame rate (default = 25)\n"
+           "-p N                 set the number of times the animation is played. 0 means\n"
            "                     infinite (default = 0)\n"
-           "-delayfile file      text file containing one number per image giving the\n"
+           "-d file              text file containing one number per image giving the\n"
            "                     display delay per image in centiseconds.\n"
+		   "-x                   set quantizer parameter for the alpha channel (default = same as -q value)\n"
+		   "-t                   store the color with premultiplied alpha\n"
+		   "-g                   encode the color data with the limited range of video\n"
+		   "-s                   include MD5 hash in HEVC bitstream\n"
+		   "-k                   keep the metadata (from JPEG: EXIF, ICC profile, XMP, from PNG: ICC profile)\n"
+		   "-v                   show debug messages\n"
            , DEFAULT_OUTFILENAME, DEFAULT_QP, BIT_DEPTH_MAX, DEFAULT_BIT_DEPTH,
            hevc_encoders, hevc_encoder_name[0], DEFAULT_COMPRESS_LEVEL);
-
-    if (is_full) {
-        printf("\nAdvanced options:\n"
-           "-alphaq              set quantizer parameter for the alpha channel (default = same as -q value)\n"
-           "-premul              store the color with premultiplied alpha\n"
-           "-limitedrange        encode the color data with the limited range of video\n"
-           "-hash                include MD5 hash in HEVC bitstream\n"
-           "-keepmetadata        keep the metadata (from JPEG: EXIF, ICC profile, XMP, from PNG: ICC profile)\n"
-           "-v                   show debug messages\n"
-               );
-    }
-
     exit(1);
 }
 
-struct option long_opts[] = {
-    { "hash", no_argument },
-    { "keepmetadata", no_argument },
-    { "alphaq", required_argument },
-    { "lossless", no_argument },
-    { "limitedrange", no_argument },
-    { "premul", no_argument },
-    { "loop", required_argument },
-    { "fps", required_argument },
-    { "delayfile", required_argument },
-    { NULL },
-};
-
-int encode_main(int argc, char **argv)
+int main(int argc, char **argv)
 {
     const char *infilename, *outfilename, *frame_delay_file;
     Image *img;
@@ -2723,59 +2704,12 @@ int encode_main(int argc, char **argv)
 	option_index = -1;
     
     for(;;) {
-		c = getopt(argc, argv, "q:o:hf:c:vm:b:e:a");
+		c = getopt(argc, argv, "q:o:hf:c:vlm:b:e:r:p:d:axtgskv");
         if (c == -1)
             break;
         switch(c) {
-        case 0:
-            switch(option_index) {
-            case 0:
-                p->sei_decoded_picture_hash = 1;
-                break;
-            case 1:
-                keep_metadata = 1;
-                break;
-            case 2:
-                p->alpha_qp = atoi(optarg);
-                if (p->alpha_qp < 0 || p->alpha_qp > 51) {
-                    fprintf(stderr, "alpha_qp must be between 0 and 51\n");
-                    exit(1);
-                }
-                break;
-            case 3:
-                p->lossless = 1;
-                color_space = BPG_CS_RGB;
-                p->preferred_chroma_format = BPG_FORMAT_444;
-                bit_depth = 8;
-                limited_range = 0;
-                break;
-            case 4:
-                limited_range = 1;
-                break;
-            case 5:
-                premultiplied_alpha = 1;
-                break;
-            case 6:
-                p->loop_count = strtoul(optarg, NULL, 0);
-                break;
-            case 7:
-                p->frame_delay_num = 1;
-                p->frame_delay_den = strtoul(optarg, NULL, 0);
-                if (p->frame_delay_den == 0) {
-                    fprintf(stderr, "invalid frame rate\n");
-                    exit(1);
-                }
-                break;
-            case 8:
-                frame_delay_file = optarg;
-                break;
-            default:
-                goto show_help;
-            }
-            break;
         case 'h':
-        show_help:
-            help(1);
+            help();
             break;
         case 'q':
             p->qp = atoi(optarg);
@@ -2838,6 +2772,13 @@ int encode_main(int argc, char **argv)
         case 'v':
             p->verbose++;
             break;
+		case 'l':
+			p->lossless = 1;
+			color_space = BPG_CS_RGB;
+			p->preferred_chroma_format = BPG_FORMAT_444;
+			bit_depth = 8;
+			limited_range = 0;
+			break;
         case 'e':
             for(i = 0; i < HEVC_ENCODER_COUNT; i++) {
                 if (!strcmp(optarg, hevc_encoder_name[i]))
@@ -2856,14 +2797,47 @@ int encode_main(int argc, char **argv)
         case 'a':
             p->animated = 1;
             break;
+		case 's':
+			p->sei_decoded_picture_hash = 1;
+			break;
+		case 'k':
+			keep_metadata = 1;
+			break;
+		case 'x':
+			p->alpha_qp = atoi(optarg);
+			if (p->alpha_qp < 0 || p->alpha_qp > 51) {
+				fprintf(stderr, "alpha_qp must be between 0 and 51\n");
+				exit(1);
+			}
+			break;
+		case 'g':
+			limited_range = 1;
+			break;
+		case 't':
+			premultiplied_alpha = 1;
+			break;
+		case 'p':
+			p->loop_count = strtoul(optarg, NULL, 0);
+			break;
+		case 'r':
+			p->frame_delay_num = 1;
+			p->frame_delay_den = strtoul(optarg, NULL, 0);
+			if (p->frame_delay_den == 0) {
+				fprintf(stderr, "invalid frame rate\n");
+				exit(1);
+			}
+			break;
+		case 'd':
+			frame_delay_file = optarg;
+			break;
         default:
             exit(1);
         }
     }
 
 	if (optind > argc) 
-		help(0);
-	infilename = argv[0];
+		help();
+	infilename = argv[optind++];
 
 	f = fopen(outfilename, "wb");
 	if (!f) {

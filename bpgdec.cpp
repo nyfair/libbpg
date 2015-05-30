@@ -25,17 +25,25 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include <getopt.h>
-#include <inttypes.h>
+#include "getopt.h"
+#include "inttypes.h"
+#include "stdint.h"
 
 /* define it to include PNG output */
 #define USE_PNG
 
 #ifdef USE_PNG
-#include <png.h>
+#include "png.h"
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 #include "libbpg.h"
+#ifdef __cplusplus
+}
+#endif
+#include "config.h"
 
 static void ppm_save(BPGDecoderContext *img, const char *filename)
 {
@@ -49,9 +57,9 @@ static void ppm_save(BPGDecoderContext *img, const char *filename)
     w = img_info->width;
     h = img_info->height;
 
-    rgb_line = malloc(3 * w);
+    rgb_line = (uint8_t*)malloc(3 * w);
 
-    f = fopen(filename,"wb");
+    f = fopen(filename,"w");
     if (!f) {
         fprintf(stderr, "%s: I/O error\n", filename);
         exit(1);
@@ -76,7 +84,7 @@ static void png_write_data (png_structp png_ptr, png_bytep data,
     FILE *f;
     int ret;
 
-    f = png_get_io_ptr(png_ptr);
+    f = (FILE*)png_get_io_ptr(png_ptr);
     ret = fwrite(data, 1, length, f);
     if (ret != length)
 	png_error(png_ptr, "PNG Write Error");
@@ -212,7 +220,7 @@ static void bpg_show_info(const char *filename, int show_extensions)
         /* if no extension are shown, just need the header */
         buf_len_max = BPG_DECODER_INFO_BUF_SIZE;
     }
-    buf = malloc(buf_len_max);
+    buf = (uint8_t*)malloc(buf_len_max);
     buf_len = fread(buf, 1, buf_len_max, f);
 
     ret = bpg_decoder_get_info_from_buf(p, show_extensions ? &first_md : NULL,
@@ -319,7 +327,7 @@ int main(int argc, char **argv)
     buf_len = ftell(f);
     fseek(f, 0, SEEK_SET);
 
-    buf = malloc(buf_len);
+    buf = (uint8_t*)malloc(buf_len);
     if (fread(buf, 1, buf_len, f) != buf_len) {
         fprintf(stderr, "Error while reading file\n");
         exit(1);
@@ -340,7 +348,7 @@ int main(int argc, char **argv)
     if (p)
         p++;
 
-    if (p && strcasecmp(p, "ppm") != 0) {
+    if (p && stricmp(p, "ppm") != 0) {
         png_save(img, outfilename, bit_depth);
     } else 
 #endif

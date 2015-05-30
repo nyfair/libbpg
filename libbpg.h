@@ -24,6 +24,8 @@
 #ifndef _LIBBPG_H
 #define _LIBBPG_H
 
+#define CONFIG_BPG_VERSION "0.9.5"
+
 typedef struct BPGDecoderContext BPGDecoderContext;
 
 typedef enum {
