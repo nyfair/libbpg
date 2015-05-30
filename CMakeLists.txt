@@ -12,9 +12,9 @@ SET(SOURCE_FILES
 	jctvc/TLibEncoder/TEncGOP.cpp
 	jctvc/TLibEncoder/TEncSampleAdaptiveOffset.cpp
 	jctvc/TLibEncoder/TEncBinCoderCABAC.cpp
-	jctvc/TLibEncoder/TEncAnalyze.cpp
 	jctvc/TLibEncoder/TEncEntropy.cpp
 	jctvc/TLibEncoder/TEncTop.cpp
+	jctvc/TLibEncoder/SEIEncoder.cpp
 	jctvc/TLibEncoder/SEIwrite.cpp
 	jctvc/TLibEncoder/TEncPic.cpp
 	jctvc/TLibEncoder/TEncRateCtrl.cpp
