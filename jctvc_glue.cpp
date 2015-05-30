@@ -65,13 +65,6 @@ static int jctvc_close(HEVCEncoderContext *s, uint8_t **pbuf)
     
     fclose(s->yuv_file);
     s->yuv_file = NULL;
-
-    m_gcAnalyzeAll.clear();
-    m_gcAnalyzeI.clear();
-    m_gcAnalyzeP.clear();
-    m_gcAnalyzeB.clear();
-    m_gcAnalyzeAll_in.clear();
-    
     cTAppEncTop.create();
 
     argc = 0;
@@ -234,14 +227,14 @@ static int jctvc_close(HEVCEncoderContext *s, uint8_t **pbuf)
 
 #ifdef _MSC_VER
 HEVCEncoder jctvc_encoder = {
-	jctvc_open,
-	jctvc_encode,
-	jctvc_close,
+  jctvc_open,
+  jctvc_encode,
+  jctvc_close,
 };
 #else
 HEVCEncoder jctvc_encoder = {
-	.open = jctvc_open,
-	.encode = jctvc_encode,
-	.close = jctvc_close,
+  .open = jctvc_open,
+  .encode = jctvc_encode,
+  .close = jctvc_close,
 };
 #endif

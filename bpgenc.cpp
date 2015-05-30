@@ -2677,8 +2677,11 @@ void help()
            hevc_encoders, hevc_encoder_name[0], DEFAULT_COMPRESS_LEVEL);
     exit(1);
 }
-
+#ifdef ENCODE_MAIN
+int encode_main(int argc, char **argv)
+#else
 int main(int argc, char **argv)
+#endif
 {
     const char *infilename, *outfilename, *frame_delay_file;
     Image *img;

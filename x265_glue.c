@@ -203,8 +203,16 @@ static int x265_close(HEVCEncoderContext *s, uint8_t **pbuf)
     return buf_len;
 }
 
+#ifdef _MSC_VER
+HEVCEncoder x265_hevc_encoder = {
+  x265_open,
+  x265_encode,
+  x265_close,
+};
+#else
 HEVCEncoder x265_hevc_encoder = {
   .open = x265_open,
   .encode = x265_encode,
   .close = x265_close,
 };
+#endif
