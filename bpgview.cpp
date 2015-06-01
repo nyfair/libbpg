@@ -39,7 +39,8 @@ extern "C" {
 #include "libbpg.h"
 #ifdef __cplusplus
 }
-#endif#include "config.h"
+#endif
+#include "config.h"
 
 typedef enum {
     BG_BLACK,

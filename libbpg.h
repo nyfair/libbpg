@@ -25,7 +25,10 @@
 #define _LIBBPG_H
 
 #define CONFIG_BPG_VERSION "0.9.5"
-
+#ifndef _MSC_VER
+#define stricmp strcasecmp
+#define _snprintf snprintf
+#endif
 typedef struct BPGDecoderContext BPGDecoderContext;
 
 typedef enum {
